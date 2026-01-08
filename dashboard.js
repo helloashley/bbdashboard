@@ -1,8 +1,7 @@
-// BookedBy Dashboard - Browser Compatible Version
-// No ES6 imports - uses global React, Recharts, etc.
+// BookedBy Dashboard - Simplified Browser Version
+// Uses CSS for visualizations instead of external chart libraries
 
 const { useState, useEffect } = React;
-const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } = Recharts;
 
 // BookedBy Brand Colors
 const COLORS = {
@@ -21,8 +20,8 @@ const COLORS = {
 };
 
 // CONFIGURATION - Your Google Drive file IDs
-const GOOGLE_SHEET_ID = '1jiBYlBD3WBMNH-fhGRsENv9KgtRyZ-GYW3UucHx2V_Q'; // Your main Google Sheet
-const GOOGLE_DOC_ID = '1SXPGWbJ1PTMJYclmobCkNi6551L7FfXUobfjbn9jdAk'; // Your Google Doc
+const GOOGLE_SHEET_ID = '1jiBYlBD3WBMNH-fhGRsENv9KgtRyZ-GYW3UucHx2V_Q';
+const GOOGLE_DOC_ID = '1SXPGWbJ1PTMJYclmobCkNi6551L7FfXUobfjbn9jdAk';
 
 function BookedByDashboard() {
   const [tasks, setTasks] = useState([]);
@@ -65,14 +64,11 @@ function BookedByDashboard() {
       }
 
       const csvText = await response.text();
-      
-      // Parse CSV using SheetJS
       const workbook = XLSX.read(csvText, { type: 'string' });
       const firstSheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[firstSheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
       
-      // Parse the data
       const parsedTasks = jsonData.map((row, index) => ({
         id: index,
         task: row['Task'] || row['task'] || '',
@@ -134,14 +130,10 @@ function BookedByDashboard() {
       
       if (currentSection === 'open') {
         const cleanText = line.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '');
-        if (cleanText) {
-          tempOpenItems.push({ id: tempOpenItems.length + 1, text: cleanText });
-        }
+        if (cleanText) tempOpenItems.push({ id: tempOpenItems.length + 1, text: cleanText });
       } else if (currentSection === 'action') {
         const cleanText = line.replace(/^[-*•]\s*/, '').replace(/^\d+\.\s*/, '');
-        if (cleanText) {
-          tempActionItems.push({ id: tempActionItems.length + 1, text: cleanText });
-        }
+        if (cleanText) tempActionItems.push({ id: tempActionItems.length + 1, text: cleanText });
       } else if (currentSection === 'links') {
         const linkMatch = line.match(/^[-*•]?\s*(.+?):\s*(https?:\/\/.+)$/i) || 
                          line.match(/^[-*•]?\s*(.+?)\s*-\s*(https?:\/\/.+)$/i);
@@ -155,7 +147,7 @@ function BookedByDashboard() {
         } else if (line.match(/^https?:\/\//i)) {
           tempDocLinks.push({
             id: tempDocLinks.length + 1,
-            name: line.substring(0, 50) + '...',
+            name: 'Link',
             url: line.trim()
           });
         }
@@ -177,13 +169,12 @@ function BookedByDashboard() {
     }, { ready: 0, inProgress: 0, complete: 0 });
 
     const total = statusCount.ready + statusCount.inProgress + statusCount.complete;
-    
     if (total === 0) return [];
     
     return [
-      { name: 'Ready', value: statusCount.ready, percentage: ((statusCount.ready / total) * 100).toFixed(0) },
-      { name: 'In Progress', value: statusCount.inProgress, percentage: ((statusCount.inProgress / total) * 100).toFixed(0) },
-      { name: 'Complete', value: statusCount.complete, percentage: ((statusCount.complete / total) * 100).toFixed(0) }
+      { name: 'Ready', value: statusCount.ready, percentage: ((statusCount.ready / total) * 100).toFixed(0), color: COLORS.ready },
+      { name: 'In Progress', value: statusCount.inProgress, percentage: ((statusCount.inProgress / total) * 100).toFixed(0), color: COLORS.inProgress },
+      { name: 'Complete', value: statusCount.complete, percentage: ((statusCount.complete / total) * 100).toFixed(0), color: COLORS.complete }
     ].filter(item => item.value > 0);
   };
 
@@ -256,11 +247,7 @@ function BookedByDashboard() {
         React.createElement('p', {
           style: { color: COLORS.text, marginTop: '20px', fontSize: '18px' }
         }, 'Loading dashboard...'),
-        React.createElement('style', null, `
-          @keyframes spin {
-            to { transform: rotate(360deg); }
-          }
-        `)
+        React.createElement('style', null, `@keyframes spin { to { transform: rotate(360deg); } }`)
       )
     );
   }
@@ -297,15 +284,7 @@ function BookedByDashboard() {
         },
           React.createElement('p', {
             style: { color: COLORS.textMuted, fontSize: '14px', marginBottom: '12px' }
-          }, 'Make sure your files are shared correctly:'),
-          React.createElement('ol', {
-            style: { color: COLORS.text, fontSize: '14px', lineHeight: '1.8', paddingLeft: '20px' }
-          },
-            React.createElement('li', null, 'Right-click your file in Google Drive'),
-            React.createElement('li', null, 'Click "Share"'),
-            React.createElement('li', null, 'Change to "Anyone with the link can view"'),
-            React.createElement('li', null, 'Click "Done"')
-          )
+          }, 'Make sure both files are shared as "Anyone with the link can view"')
         ),
         React.createElement('button', {
           onClick: fetchAllData,
@@ -326,7 +305,7 @@ function BookedByDashboard() {
     );
   }
 
-  // Main dashboard render - simplified for brevity but includes all sections
+  // Main dashboard
   return React.createElement('div', {
     style: { 
       minHeight: '100vh',
@@ -339,41 +318,28 @@ function BookedByDashboard() {
       href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap",
       rel: "stylesheet"
     }),
+    
+    // Header
     React.createElement('div', { style: { maxWidth: '1400px', margin: '0 auto', marginBottom: '40px' } },
       React.createElement('div', { 
         style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px' }
       },
         React.createElement('div', null,
           React.createElement('h1', {
-            style: { 
-              color: COLORS.text, 
-              fontSize: '48px', 
-              fontWeight: '700',
-              margin: 0,
-              letterSpacing: '-0.02em'
-            }
+            style: { color: COLORS.text, fontSize: '48px', fontWeight: '700', margin: 0, letterSpacing: '-0.02em' }
           },
             'BookedBy',
             React.createElement('span', {
-              style: { 
-                color: COLORS.secondary, 
-                fontSize: '36px',
-                marginLeft: '12px',
-                fontWeight: '400'
-              }
+              style: { color: COLORS.secondary, fontSize: '36px', marginLeft: '12px', fontWeight: '400' }
             }, 'Project Dashboard')
           ),
           React.createElement('p', {
-            style: { 
-              color: COLORS.textMuted, 
-              fontSize: '16px',
-              margin: '8px 0 0 0'
-            }
+            style: { color: COLORS.textMuted, fontSize: '16px', margin: '8px 0 0 0' }
           },
             'Real-time project tracking from Google Drive',
             lastUpdated && React.createElement('span', {
               style: { marginLeft: '12px', fontSize: '14px' }
-            }, `• Updated ${lastUpdated.toLocaleTimeString()}`)
+            }, ` • Updated ${lastUpdated.toLocaleTimeString()}`)
           )
         ),
         React.createElement('button', {
@@ -394,8 +360,11 @@ function BookedByDashboard() {
         }, '↻ Refresh Data')
       )
     ),
+    
+    // Main content
     React.createElement('div', { style: { maxWidth: '1400px', margin: '0 auto' } },
-      // Status Chart
+      
+      // Status Chart with CSS-based donut
       statusData.length > 0 && React.createElement('div', {
         style: { 
           background: COLORS.bgCard,
@@ -412,31 +381,48 @@ function BookedByDashboard() {
         React.createElement('div', {
           style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', alignItems: 'center' }
         },
-          React.createElement(ResponsiveContainer, { width: "100%", height: 300 },
-            React.createElement(PieChart, null,
-              React.createElement(Pie, {
-                data: statusData,
-                cx: "50%",
-                cy: "50%",
-                innerRadius: 80,
-                outerRadius: 120,
-                paddingAngle: 4,
-                dataKey: "value"
-              },
-                statusData.map((entry, index) =>
-                  React.createElement(Cell, { key: `cell-${index}`, fill: chartColors[entry.name] })
-                )
-              ),
-              React.createElement(Tooltip, {
-                contentStyle: { 
-                  background: COLORS.bgLight, 
-                  border: `1px solid ${COLORS.border}`,
-                  borderRadius: '8px',
-                  color: COLORS.text
+          // CSS Donut Chart
+          React.createElement('div', { style: { display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', height: '300px' } },
+            React.createElement('div', {
+              style: {
+                width: '240px',
+                height: '240px',
+                borderRadius: '50%',
+                background: `conic-gradient(
+                  ${statusData.map((item, idx) => {
+                    const prevTotal = statusData.slice(0, idx).reduce((sum, i) => sum + parseFloat(i.percentage), 0);
+                    const currentTotal = prevTotal + parseFloat(item.percentage);
+                    return `${item.color} ${prevTotal}% ${currentTotal}%`;
+                  }).join(', ')}
+                )`,
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }
+            },
+              React.createElement('div', {
+                style: {
+                  width: '160px',
+                  height: '160px',
+                  borderRadius: '50%',
+                  background: COLORS.bgCard,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexDirection: 'column'
                 }
-              })
+              },
+                React.createElement('div', {
+                  style: { color: COLORS.text, fontSize: '32px', fontWeight: '700' }
+                }, tasks.length),
+                React.createElement('div', {
+                  style: { color: COLORS.textMuted, fontSize: '14px' }
+                }, 'Total Tasks')
+              )
             )
           ),
+          // Legend
           React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '16px' } },
             statusData.map((item, idx) =>
               React.createElement('div', {
@@ -448,17 +434,12 @@ function BookedByDashboard() {
                   padding: '16px',
                   background: COLORS.bgLight,
                   borderRadius: '12px',
-                  border: `2px solid ${chartColors[item.name]}30`
+                  border: `2px solid ${item.color}30`
                 }
               },
                 React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px' } },
                   React.createElement('div', {
-                    style: { 
-                      width: '12px', 
-                      height: '12px', 
-                      borderRadius: '50%', 
-                      background: chartColors[item.name]
-                    }
+                    style: { width: '12px', height: '12px', borderRadius: '50%', background: item.color }
                   }),
                   React.createElement('span', {
                     style: { color: COLORS.text, fontSize: '16px', fontWeight: '500' }
@@ -466,12 +447,7 @@ function BookedByDashboard() {
                 ),
                 React.createElement('div', { style: { textAlign: 'right' } },
                   React.createElement('div', {
-                    style: { 
-                      color: chartColors[item.name], 
-                      fontSize: '28px', 
-                      fontWeight: '700',
-                      lineHeight: '1'
-                    }
+                    style: { color: item.color, fontSize: '28px', fontWeight: '700', lineHeight: '1' }
                   }, `${item.percentage}%`),
                   React.createElement('div', {
                     style: { color: COLORS.textMuted, fontSize: '14px' }
@@ -482,25 +458,310 @@ function BookedByDashboard() {
           )
         )
       ),
-      // Recently Completed & Upcoming sections...
-      // (Rest of the UI would go here - truncated for space)
-      React.createElement('div', {
+      
+      // Grid for Recently Completed and Upcoming
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '32px' } },
+        // Recently Completed
+        React.createElement('div', {
+          style: { 
+            background: COLORS.bgCard,
+            borderRadius: '16px',
+            padding: '32px',
+            border: `1px solid ${COLORS.border}`,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+          }
+        },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' } },
+            React.createElement('div', { 
+              style: { color: COLORS.complete, fontSize: '24px' } 
+            }, '✓'),
+            React.createElement('h2', {
+              style: { color: COLORS.text, fontSize: '20px', margin: 0, fontWeight: '600' }
+            }, 'Recently Completed'),
+            React.createElement('span', {
+              style: { 
+                background: COLORS.complete + '20',
+                color: COLORS.complete,
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: '600',
+                marginLeft: 'auto'
+              }
+            }, recentlyCompleted.length)
+          ),
+          React.createElement('p', {
+            style: { color: COLORS.textMuted, fontSize: '14px', marginBottom: '20px' }
+          }, 'Completed in the last 7 days'),
+          React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' } },
+            recentlyCompleted.length === 0 ? 
+              React.createElement('p', {
+                style: { color: COLORS.textMuted, fontStyle: 'italic' }
+              }, 'No recently completed tasks') :
+              recentlyCompleted.map((task, idx) =>
+                React.createElement('div', {
+                  key: idx,
+                  style: { 
+                    background: COLORS.bgLight,
+                    padding: '16px',
+                    borderRadius: '12px',
+                    borderLeft: `4px solid ${COLORS.complete}`
+                  }
+                },
+                  React.createElement('div', {
+                    style: { color: COLORS.text, fontSize: '15px', fontWeight: '500', marginBottom: '8px' }
+                  }, task.task),
+                  React.createElement('div', {
+                    style: { color: COLORS.textMuted, fontSize: '13px' }
+                  }, `Completed: ${task.targetCompleted}`)
+                )
+              )
+          )
+        ),
+        
+        // Upcoming
+        React.createElement('div', {
+          style: { 
+            background: COLORS.bgCard,
+            borderRadius: '16px',
+            padding: '32px',
+            border: `1px solid ${COLORS.border}`,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+          }
+        },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' } },
+            React.createElement('div', { 
+              style: { color: COLORS.accent, fontSize: '24px' } 
+            }, '⏰'),
+            React.createElement('h2', {
+              style: { color: COLORS.text, fontSize: '20px', margin: 0, fontWeight: '600' }
+            }, 'Upcoming Tasks'),
+            React.createElement('span', {
+              style: { 
+                background: COLORS.accent + '20',
+                color: COLORS.accent,
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: '600',
+                marginLeft: 'auto'
+              }
+            }, upcoming.length)
+          ),
+          React.createElement('p', {
+            style: { color: COLORS.textMuted, fontSize: '14px', marginBottom: '20px' }
+          }, 'Due within the next 7 days'),
+          React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '400px', overflowY: 'auto' } },
+            upcoming.length === 0 ? 
+              React.createElement('p', {
+                style: { color: COLORS.textMuted, fontStyle: 'italic' }
+              }, 'No upcoming tasks') :
+              upcoming.map((task, idx) =>
+                React.createElement('div', {
+                  key: idx,
+                  style: { 
+                    background: COLORS.bgLight,
+                    padding: '16px',
+                    borderRadius: '12px',
+                    borderLeft: `4px solid ${chartColors[task.status] || COLORS.accent}`
+                  }
+                },
+                  React.createElement('div', {
+                    style: { color: COLORS.text, fontSize: '15px', fontWeight: '500', marginBottom: '8px' }
+                  }, task.task),
+                  React.createElement('div', {
+                    style: { display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px' }
+                  },
+                    React.createElement('span', {
+                      style: { 
+                        background: chartColors[task.status] || COLORS.accent,
+                        color: COLORS.bg,
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        fontSize: '12px',
+                        fontWeight: '600'
+                      }
+                    }, task.status),
+                    React.createElement('span', {
+                      style: { color: COLORS.textMuted }
+                    }, `Due: ${task.target}`)
+                  )
+                )
+              )
+          )
+        )
+      ),
+      
+      // Grid for Open Items and Action Items
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', marginBottom: '32px' } },
+        // Open Items
+        React.createElement('div', {
+          style: { 
+            background: COLORS.bgCard,
+            borderRadius: '16px',
+            padding: '32px',
+            border: `1px solid ${COLORS.border}`,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+          }
+        },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' } },
+            React.createElement('div', { 
+              style: { color: COLORS.secondary, fontSize: '24px' } 
+            }, '📄'),
+            React.createElement('h2', {
+              style: { color: COLORS.text, fontSize: '20px', margin: 0, fontWeight: '600' }
+            }, 'Open Items'),
+            React.createElement('span', {
+              style: { 
+                background: COLORS.secondary + '20',
+                color: COLORS.secondary,
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: '600',
+                marginLeft: 'auto'
+              }
+            }, openItems.length)
+          ),
+          React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+            openItems.length === 0 ? 
+              React.createElement('p', {
+                style: { color: COLORS.textMuted, fontStyle: 'italic' }
+              }, 'No open items in your Google Doc') :
+              openItems.map((item) =>
+                React.createElement('div', {
+                  key: item.id,
+                  style: { 
+                    background: COLORS.bgLight,
+                    padding: '14px',
+                    borderRadius: '8px'
+                  }
+                },
+                  React.createElement('span', {
+                    style: { color: COLORS.text, fontSize: '14px' }
+                  }, item.text)
+                )
+              )
+          )
+        ),
+        
+        // Action Items
+        React.createElement('div', {
+          style: { 
+            background: COLORS.bgCard,
+            borderRadius: '16px',
+            padding: '32px',
+            border: `1px solid ${COLORS.border}`,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+          }
+        },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' } },
+            React.createElement('div', { 
+              style: { color: COLORS.accent, fontSize: '24px' } 
+            }, '⚡'),
+            React.createElement('h2', {
+              style: { color: COLORS.text, fontSize: '20px', margin: 0, fontWeight: '600' }
+            }, 'Action Items'),
+            React.createElement('span', {
+              style: { 
+                background: COLORS.accent + '20',
+                color: COLORS.accent,
+                padding: '4px 12px',
+                borderRadius: '12px',
+                fontSize: '14px',
+                fontWeight: '600',
+                marginLeft: 'auto'
+              }
+            }, actionItems.length)
+          ),
+          React.createElement('div', { style: { display: 'flex', flexDirection: 'column', gap: '10px' } },
+            actionItems.length === 0 ? 
+              React.createElement('p', {
+                style: { color: COLORS.textMuted, fontStyle: 'italic' }
+              }, 'No action items in your Google Doc') :
+              actionItems.map((item) =>
+                React.createElement('div', {
+                  key: item.id,
+                  style: { 
+                    background: COLORS.bgLight,
+                    padding: '14px',
+                    borderRadius: '8px'
+                  }
+                },
+                  React.createElement('span', {
+                    style: { color: COLORS.text, fontSize: '14px' }
+                  }, item.text)
+                )
+              )
+          )
+        )
+      ),
+      
+      // Document Links
+      documentLinks.length > 0 && React.createElement('div', {
         style: { 
           background: COLORS.bgCard,
           borderRadius: '16px',
           padding: '32px',
-          marginTop: '32px',
           border: `1px solid ${COLORS.border}`,
-          textAlign: 'center'
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
         }
       },
-        React.createElement('p', {
-          style: { color: COLORS.textMuted, fontSize: '14px' }
-        }, `Dashboard loaded successfully! Showing ${tasks.length} tasks, ${openItems.length} open items, ${actionItems.length} action items.`)
+        React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' } },
+          React.createElement('div', { 
+            style: { color: COLORS.primary, fontSize: '24px' } 
+          }, '🔗'),
+          React.createElement('h2', {
+            style: { color: COLORS.text, fontSize: '20px', margin: 0, fontWeight: '600' }
+          }, 'Document Links'),
+          React.createElement('span', {
+            style: { 
+              background: COLORS.primary + '20',
+              color: COLORS.primary,
+              padding: '4px 12px',
+              borderRadius: '12px',
+              fontSize: '14px',
+              fontWeight: '600',
+              marginLeft: 'auto'
+            }
+          }, documentLinks.length)
+        ),
+        React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px' } },
+          documentLinks.map((link) =>
+            React.createElement('a', {
+              key: link.id,
+              href: link.url,
+              target: '_blank',
+              rel: 'noopener noreferrer',
+              style: { 
+                background: COLORS.bgLight,
+                padding: '16px',
+                borderRadius: '8px',
+                color: COLORS.secondary,
+                textDecoration: 'none',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                transition: 'all 0.2s'
+              },
+              onMouseOver: (e) => {
+                e.currentTarget.style.background = COLORS.secondary + '20';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              },
+              onMouseOut: (e) => {
+                e.currentTarget.style.background = COLORS.bgLight;
+                e.currentTarget.style.transform = 'translateY(0)';
+              }
+            },
+              React.createElement('span', null, '↗'),
+              link.name
+            )
+          )
+        )
       )
     )
   );
 }
 
-// Don't use export - render directly
 window.BookedByDashboard = BookedByDashboard;
